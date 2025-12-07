@@ -15,31 +15,50 @@ def create_exif_thumbnail(img, max_size=160):
     thumbnail.save(buf, format="JPEG")
     return buf.getvalue()
 
+def process_photo(reference_exif, input_path, output_path):
+    # Load input image
+    img = Image.open(input_path)
 
+    # Clone and clean EXIF (don’t modify original dict)
+    exif_copy = {
+        ifd: dict(tags) for ifd, tags in reference_exif.items() if isinstance(tags, dict)
+    }
+    exif_copy["thumbnail"] = create_exif_thumbnail(img)
 
-def copy_exif(source_path, target_path, output_path):
-    # Load EXIF from the known-working image
-    exif_dict = piexif.load(source_path)
+    exif_bytes = piexif.dump(exif_copy)
 
-    exif_dict["thumbnail"] = None   
-
-    # Load the target image (the one with missing/bad EXIF)
-    img = Image.open(target_path)
-
-    exif_dict["thumbnail"] = create_exif_thumbnail(img)
-
-    # Dump EXIF back into bytes format
-    exif_bytes = piexif.dump(exif_dict)
-
-    # Save new image with transferred EXIF
+    # Save the processed image
     img.save(output_path, "jpeg", exif=exif_bytes)
+    print(f"Processed: {input_path} → {output_path}")
 
-    print(f"EXIF copied successfully → {output_path}")
+def main():
+    # Load EXIF from reference image only once
+    reference_exif = piexif.load(REFERENCE_IMAGE)
+
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # Collect files to delete later
+    files_to_delete = []
+
+    # Process each photo in input directory
+    for filename in os.listdir(INPUT_DIR):
+        if not filename.lower().endswith((".jpg", ".jpeg")):
+            continue  # skip non-JPEG files
+
+        in_path = os.path.join(INPUT_DIR, filename)
+        out_path = os.path.join(OUTPUT_DIR, filename)
+
+        process_photo(reference_exif, in_path, out_path)
+        files_to_delete.append(in_path)
+
+    # Remove input files after successful processing
+    for f in files_to_delete:
+        os.remove(f)
+        print(f"Deleted: {f}")
+
+    print("✅ Done! All photos processed and input folder cleared.")
 
 
 if __name__ == "__main__":
-    copy_exif(
-        source_path="reference.JPG",      # Your Canon-accepted image
-        target_path="target.jpeg",          # Internet image you want to print
-        output_path="new_with_exif.JPG" # Output file with copied EXIF
-    )
+    main()
