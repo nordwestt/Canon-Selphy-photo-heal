@@ -3,10 +3,17 @@ from PIL import Image
 import io
 import shutil
 import os
+import json
+import base64
 
-REFERENCE_IMAGE = "reference.JPG"       # A known-good Selphy-compatible file
+REFERENCE_BIN = "reference_exif.bin"
 INPUT_DIR = "input"
 OUTPUT_DIR = "output"
+
+def load_reference_exif():
+    with open(REFERENCE_BIN, "rb") as f:
+        exif_bytes = f.read()
+    return piexif.load(exif_bytes)   # reliably returns a clean dict
 
 def create_exif_thumbnail(img, max_size=160):
     thumbnail = img.copy()
@@ -39,7 +46,7 @@ def process_photo(reference_exif, input_path, output_path):
 
 def main():
     # Load EXIF from reference image only once
-    reference_exif = piexif.load(REFERENCE_IMAGE)
+    reference_exif = load_reference_exif()
 
     # Ensure output directory exists
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -56,7 +63,7 @@ def main():
             continue  # skip non-JPEG files
 
         in_path = os.path.join(INPUT_DIR, filename)
-        
+
         # Force output filename to end with .JPG
         base_name = os.path.splitext(filename)[0]
         out_path = os.path.join(OUTPUT_DIR, base_name + ".JPG")
@@ -74,3 +81,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
