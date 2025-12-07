@@ -39,12 +39,12 @@ Instead of reverse-engineering every tag, this tool copies the EXIF from a “kn
 This creates clean, printer-friendly files — with your actual image data preserved.
 
 # 🚀 How to Use
-1. Install requirements [see here for installing uv](https://docs.astral.sh/uv/getting-started/installation/)
+### 1. Install requirements [see here for installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 ```
 uv sync
 ```
 
-2. Prepare your folders
+### 2. Prepare your folders
 Your project directory should look like:
 ```
 Canon-Selphy-photo-heal/
@@ -54,7 +54,7 @@ Canon-Selphy-photo-heal/
 └── output/            # Processed photos will appear here
 ```
 
-3. Add photos to process
+### 3. Add photos to process
 
 Put any of these formats inside the input/ folder:
 
@@ -63,12 +63,12 @@ Put any of these formats inside the input/ folder:
 - .png
 - .webp
 
-4. Run the script
+### 4. Run the script
 ```
 uv run main.py
 ```
 
-5. Collect your photos
+### 5. Collect your photos
 
 Photos appear in the `output` folder
 
