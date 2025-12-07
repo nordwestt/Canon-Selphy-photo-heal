@@ -15,19 +15,25 @@ def create_exif_thumbnail(img, max_size=160):
     thumbnail.save(buf, format="JPEG")
     return buf.getvalue()
 
+def sanitize_exif(reference_exif, img):
+    """Clone EXIF and replace thumbnail with a fresh one."""
+    cleaned = {
+        ifd: dict(tags) for ifd, tags in reference_exif.items() if isinstance(tags, dict)
+    }
+    cleaned["thumbnail"] = create_exif_thumbnail(img)
+    return piexif.dump(cleaned)
+
 def process_photo(reference_exif, input_path, output_path):
     # Load input image
     img = Image.open(input_path)
 
-    # Clone and clean EXIF (don’t modify original dict)
-    exif_copy = {
-        ifd: dict(tags) for ifd, tags in reference_exif.items() if isinstance(tags, dict)
-    }
-    exif_copy["thumbnail"] = create_exif_thumbnail(img)
+    # Convert to RGB (important for PNG/WebP/HEIC)
+    img = img.convert("RGB")
 
-    exif_bytes = piexif.dump(exif_copy)
+    # Build EXIF (with new thumbnail)
+    exif_bytes = sanitize_exif(reference_exif, img)
 
-    # Save the processed image
+    # Save output as JPEG, always .JPG
     img.save(output_path, "jpeg", exif=exif_bytes)
     print(f"Processed: {input_path} → {output_path}")
 
@@ -41,13 +47,19 @@ def main():
     # Collect files to delete later
     files_to_delete = []
 
+    # Allowed extensions Pillow can open
+    allowed_ext = (".jpg", ".jpeg", ".png", ".webp", ".heif", ".heic")
+
     # Process each photo in input directory
     for filename in os.listdir(INPUT_DIR):
-        if not filename.lower().endswith((".jpg", ".jpeg")):
+        if not filename.lower().endswith(allowed_ext):
             continue  # skip non-JPEG files
 
         in_path = os.path.join(INPUT_DIR, filename)
-        out_path = os.path.join(OUTPUT_DIR, filename)
+        
+        # Force output filename to end with .JPG
+        base_name = os.path.splitext(filename)[0]
+        out_path = os.path.join(OUTPUT_DIR, base_name + ".JPG")
 
         process_photo(reference_exif, in_path, out_path)
         files_to_delete.append(in_path)
