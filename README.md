@@ -30,19 +30,16 @@ It is designed to be simple, fast, and frustration-free.
 
 Canon Selphy printers enforce quirky, undocumented EXIF rules that:
 
-Require certain tags to be present
-
-Reject images without EXIF thumbnails
-
-Sometimes ignore photos with certain DPI fields
-
-Don’t like PNGs or images edited by some apps
+- Require certain tags to be present
+- Reject images without EXIF thumbnails
+- Sometimes ignore photos with certain DPI fields
+- Don’t like PNGs or images edited by some apps
 
 Instead of reverse-engineering every tag, this tool copies the EXIF from a “known good” image and reuses it across all your photos.
 This creates clean, printer-friendly files — with your actual image data preserved.
 
-🚀 How to Use
-1. Install requirements
+# 🚀 How to Use
+1. Install requirements [see here for installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 ```
 uv sync
 ```
